@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import { WishlistProvider } from "@/context/WishlistContext";
+import { SearchProvider } from "@/context/SearchContext";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { Toaster } from "react-hot-toast";
@@ -24,10 +25,12 @@ export default function RootLayout({
       <body className={inter.className}>
         <AuthProvider>
           <WishlistProvider>
-            <Toaster position="bottom-center" reverseOrder={false} />
-            <Navbar />
-            <main className="min-h-screen">{children}</main>
-            <Footer />
+            <SearchProvider>
+              <Toaster position="bottom-center" reverseOrder={false} />
+              <Navbar />
+              <main className="min-h-screen">{children}</main>
+              <Footer />
+            </SearchProvider>
           </WishlistProvider>
         </AuthProvider>
       </body>

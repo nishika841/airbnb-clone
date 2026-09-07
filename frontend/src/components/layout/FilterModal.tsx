@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
-import { X, Check } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { X, Check, Users, Minus, Plus } from "lucide-react";
 import { SearchFilterState } from "@/types";
 
 interface FilterModalProps {
@@ -40,9 +40,20 @@ export default function FilterModal({
   const [minPrice, setMinPrice] = useState<number | undefined>(currentFilters.min_price);
   const [maxPrice, setMaxPrice] = useState<number | undefined>(currentFilters.max_price);
   const [selectedType, setSelectedType] = useState<string>(currentFilters.property_type || "Any");
+  const [guests, setGuests] = useState<number>(currentFilters.guests || 1);
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>(
     currentFilters.amenities || []
   );
+
+  useEffect(() => {
+    if (isOpen) {
+      setMinPrice(currentFilters.min_price);
+      setMaxPrice(currentFilters.max_price);
+      setSelectedType(currentFilters.property_type || "Any");
+      setGuests(currentFilters.guests || 1);
+      setSelectedAmenities(currentFilters.amenities || []);
+    }
+  }, [isOpen, currentFilters]);
 
   if (!isOpen) return null;
 
@@ -57,6 +68,7 @@ export default function FilterModal({
       min_price: minPrice,
       max_price: maxPrice,
       property_type: selectedType !== "Any" ? selectedType : undefined,
+      guests: guests > 1 ? guests : undefined,
       amenities: selectedAmenities.length > 0 ? selectedAmenities : undefined,
     });
     onClose();
@@ -66,24 +78,26 @@ export default function FilterModal({
     setMinPrice(undefined);
     setMaxPrice(undefined);
     setSelectedType("Any");
+    setGuests(1);
     setSelectedAmenities([]);
     onApply({
       min_price: undefined,
       max_price: undefined,
       property_type: undefined,
+      guests: undefined,
       amenities: undefined,
     });
     onClose();
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4 animate-in fade-in duration-150">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4 animate-in fade-in duration-150">
       <div className="w-full max-w-2xl rounded-3xl bg-white shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
         {/* Header */}
-        <div className="flex items-center justify-between border-b px-6 py-4">
+        <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4">
           <button
             onClick={onClose}
-            className="rounded-full p-2 hover:bg-gray-100 transition text-gray-500"
+            className="rounded-full p-2 hover:bg-gray-100 transition text-gray-500 cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -98,7 +112,7 @@ export default function FilterModal({
             <h3 className="text-lg font-bold text-gray-900">Price range</h3>
             <p className="text-sm text-gray-500 mb-4">Nightly prices before taxes and fees</p>
             <div className="grid grid-cols-2 gap-4">
-              <div className="border rounded-2xl p-3 focus-within:border-black transition">
+              <div className="border border-gray-300 rounded-2xl p-3 focus-within:border-black transition">
                 <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Minimum</label>
                 <div className="flex items-center gap-1 mt-1 font-semibold text-gray-900">
                   <span>$</span>
@@ -111,7 +125,7 @@ export default function FilterModal({
                   />
                 </div>
               </div>
-              <div className="border rounded-2xl p-3 focus-within:border-black transition">
+              <div className="border border-gray-300 rounded-2xl p-3 focus-within:border-black transition">
                 <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Maximum</label>
                 <div className="flex items-center gap-1 mt-1 font-semibold text-gray-900">
                   <span>$</span>
@@ -123,6 +137,42 @@ export default function FilterModal({
                     className="w-full outline-hidden"
                   />
                 </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Number of Guests */}
+          <div className="pt-6">
+            <h3 className="text-lg font-bold text-gray-900 mb-1">Guests</h3>
+            <p className="text-sm text-gray-500 mb-4">Minimum accommodation capacity</p>
+            <div className="flex items-center justify-between p-4 rounded-2xl border border-gray-200">
+              <div className="flex items-center gap-3">
+                <Users className="w-5 h-5 text-[#FF385C]" />
+                <div>
+                  <div className="text-sm font-bold text-gray-900">
+                    {guests} {guests === 1 ? "guest" : "guests or more"}
+                  </div>
+                  <div className="text-xs text-gray-500">Show listings fitting at least this group size</div>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  disabled={guests <= 1}
+                  onClick={() => setGuests((prev) => Math.max(1, prev - 1))}
+                  className="flex h-9 w-9 items-center justify-center rounded-full border border-gray-300 text-gray-700 disabled:opacity-25 hover:border-black transition cursor-pointer"
+                >
+                  <Minus className="w-4 h-4" />
+                </button>
+                <span className="text-sm font-bold w-6 text-center text-gray-900">{guests}</span>
+                <button
+                  type="button"
+                  disabled={guests >= 16}
+                  onClick={() => setGuests((prev) => prev + 1)}
+                  className="flex h-9 w-9 items-center justify-center rounded-full border border-gray-300 text-gray-700 hover:border-black transition cursor-pointer"
+                >
+                  <Plus className="w-4 h-4" />
+                </button>
               </div>
             </div>
           </div>
@@ -181,7 +231,7 @@ export default function FilterModal({
         </div>
 
         {/* Footer */}
-        <div className="border-t px-6 py-4 flex items-center justify-between bg-white">
+        <div className="border-t border-gray-100 px-6 py-4 flex items-center justify-between bg-white">
           <button
             onClick={handleClear}
             className="text-sm font-bold underline text-gray-800 hover:text-black cursor-pointer"

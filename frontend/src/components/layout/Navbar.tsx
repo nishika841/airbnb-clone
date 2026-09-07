@@ -2,10 +2,8 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import {
   Search,
-  Globe,
   Menu,
   User as UserIcon,
   Heart,
@@ -20,26 +18,20 @@ import {
   Moon,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { useSearch } from "@/context/SearchContext";
 import SearchModal from "./SearchModal";
 import IdentityVerificationModal from "@/components/auth/IdentityVerificationModal";
-import { SearchFilterState } from "@/types";
 
-interface NavbarProps {
-  onSearch?: (filters: Partial<SearchFilterState>) => void;
-  currentFilters?: SearchFilterState;
-}
+export default function Navbar() {
+  const { user, isHost, toggleHostMode } = useAuth();
+  const { filters, openSearchModal } = useSearch();
 
-export default function Navbar({ onSearch, currentFilters }: NavbarProps) {
-  const router = useRouter();
-  const { user, isHost, switchUser, toggleHostMode } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isIdentityModalOpen, setIsIdentityModalOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // Check saved theme
     const savedTheme = localStorage.getItem("airbnb_theme");
     if (savedTheme === "dark") {
       setIsDarkMode(true);
@@ -69,27 +61,21 @@ export default function Navbar({ onSearch, currentFilters }: NavbarProps) {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleSearchTrigger = (filters: Partial<SearchFilterState>) => {
-    if (onSearch) {
-      onSearch(filters);
-    } else {
-      const q = new URLSearchParams();
-      if (filters.search) q.append("search", filters.search);
-      if (filters.start_date) q.append("start_date", filters.start_date);
-      if (filters.end_date) q.append("end_date", filters.end_date);
-      if (filters.guests) q.append("guests", filters.guests.toString());
-      router.push(`/?${q.toString()}`);
+  const getPillLabels = () => {
+    const where = filters.search || filters.city || "Anywhere";
+    let when = "Any week";
+    if (filters.start_date) {
+      const s = filters.start_date.split("-").slice(1).join("/");
+      const e = filters.end_date ? filters.end_date.split("-").slice(1).join("/") : "";
+      when = e ? `${s} - ${e}` : s;
     }
+    const who = filters.guests ? `${filters.guests} guest${filters.guests > 1 ? "s" : ""}` : "Add guests";
+    const hasActiveFilters = Boolean(filters.search || filters.city || filters.start_date || filters.guests);
+
+    return { where, when, who, hasActiveFilters };
   };
 
-  const getSearchPillText = () => {
-    const where = currentFilters?.search || currentFilters?.city || "Anywhere";
-    const when = currentFilters?.start_date ? "Dates set" : "Any week";
-    const who = currentFilters?.guests ? `${currentFilters.guests} guests` : "Add guests";
-    return { where, when, who };
-  };
-
-  const pillText = getSearchPillText();
+  const pill = getPillLabels();
 
   return (
     <>
@@ -114,21 +100,39 @@ export default function Navbar({ onSearch, currentFilters }: NavbarProps) {
 
             {/* Iconic Search Pill */}
             <div
-              onClick={() => setIsSearchOpen(true)}
-              className="flex items-center rounded-full border border-gray-300 py-2 pl-6 pr-2 shadow-xs hover:shadow-md transition cursor-pointer text-sm font-semibold divide-x divide-gray-200"
+              className="flex items-center rounded-full border border-gray-300 py-1.5 pl-5 pr-2 shadow-xs hover:shadow-md transition cursor-pointer text-sm font-semibold divide-x divide-gray-200 bg-white"
             >
-              <span className="pr-4 text-gray-900 truncate max-w-[120px] sm:max-w-none">
-                {pillText.where}
-              </span>
-              <span className="px-4 text-gray-900 hidden md:inline-block">
-                {pillText.when}
-              </span>
-              <div className="flex items-center gap-3 pl-4">
-                <span className="text-gray-500 font-normal hidden lg:inline-block">
-                  {pillText.who}
+              {/* Where Button */}
+              <button
+                type="button"
+                onClick={() => openSearchModal("where")}
+                className="pr-4 text-left truncate max-w-[130px] sm:max-w-none text-gray-900 hover:text-black transition cursor-pointer"
+              >
+                {pill.where}
+              </button>
+
+              {/* When Button */}
+              <button
+                type="button"
+                onClick={() => openSearchModal("dates")}
+                className="px-4 text-left text-gray-900 hidden md:inline-block hover:text-black transition cursor-pointer"
+              >
+                {pill.when}
+              </button>
+
+              {/* Who / Guests Button */}
+              <div
+                onClick={() => openSearchModal("who")}
+                className="flex items-center gap-3 pl-4 cursor-pointer"
+              >
+                <span className={`text-sm hidden lg:inline-block ${filters.guests ? "text-gray-900 font-bold" : "text-gray-500 font-normal"}`}>
+                  {pill.who}
                 </span>
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#FF385C] text-white">
+                <div className="relative flex h-8 w-8 items-center justify-center rounded-full bg-[#FF385C] text-white hover:brightness-105 transition">
                   <Search className="h-4 w-4 stroke-[2.5]" />
+                  {pill.hasActiveFilters && (
+                    <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-black rounded-full ring-2 ring-white" />
+                  )}
                 </div>
               </div>
             </div>
@@ -297,12 +301,7 @@ export default function Navbar({ onSearch, currentFilters }: NavbarProps) {
       </header>
 
       {/* Interactive Search Modal */}
-      <SearchModal
-        isOpen={isSearchOpen}
-        onClose={() => setIsSearchOpen(false)}
-        onSearch={handleSearchTrigger}
-        initialFilters={currentFilters}
-      />
+      <SearchModal />
 
       {/* Identity Verification Modal */}
       <IdentityVerificationModal
