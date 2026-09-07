@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Star, ChevronDown, AlertCircle } from "lucide-react";
+import { Star, ChevronDown, ChevronUp, AlertCircle, Minus, Plus } from "lucide-react";
 import { ListingDetail, BookedDateRange } from "@/types";
 import { formatPrice, calculateNights } from "@/lib/utils";
 import CheckoutModal from "@/components/booking/CheckoutModal";
@@ -28,9 +28,13 @@ export default function ReservationWidget({
 
   const [startDate, setStartDate] = useState(defaultStart);
   const [endDate, setEndDate] = useState(defaultEnd);
-  const [guestsCount, setGuestsCount] = useState(1);
+  const [adults, setAdults] = useState(1);
+  const [childrenCount, setChildrenCount] = useState(0);
   const [isGuestDropdownOpen, setIsGuestDropdownOpen] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+
+  const maxCapacity = listing.max_guests || 10;
+  const guestsCount = Math.min(maxCapacity, Math.max(1, adults + childrenCount));
 
   const nights = calculateNights(startDate, endDate);
   const accommodationTotal = nights * listing.price_per_night;
@@ -42,6 +46,40 @@ export default function ReservationWidget({
   });
 
   const isInvalidRange = !startDate || !endDate || startDate >= endDate;
+
+  const handleIncrementAdults = (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    if (adults + childrenCount < maxCapacity) {
+      setAdults((prev) => prev + 1);
+    }
+  };
+
+  const handleDecrementAdults = (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    if (adults > 1) {
+      setAdults((prev) => prev - 1);
+    }
+  };
+
+  const handleIncrementChildren = (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    if (adults + childrenCount < maxCapacity) {
+      setChildrenCount((prev) => prev + 1);
+    }
+  };
+
+  const handleDecrementChildren = (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    if (childrenCount > 0) {
+      setChildrenCount((prev) => Math.max(0, prev - 1));
+    }
+  };
+
+  const handleSetPreset = (total: number) => {
+    const target = Math.min(maxCapacity, Math.max(1, total));
+    setAdults(target);
+    setChildrenCount(0);
+  };
 
   return (
     <>
@@ -65,10 +103,10 @@ export default function ReservationWidget({
         </div>
 
         {/* Date & Guest Input Box */}
-        <div className="rounded-2xl border border-gray-300 divide-y divide-gray-200 overflow-hidden">
+        <div className="rounded-2xl border border-gray-300 divide-y divide-gray-200 bg-white">
           {/* Check-in / Check-out */}
-          <div className="grid grid-cols-2 divide-x divide-gray-200">
-            <div className="p-2.5 hover:bg-gray-50 transition">
+          <div className="grid grid-cols-2 divide-x divide-gray-200 rounded-t-2xl">
+            <div className="p-2.5 hover:bg-gray-50 transition rounded-tl-2xl">
               <label className="block text-[10px] font-extrabold uppercase text-gray-800 tracking-wider">
                 CHECK-IN
               </label>
@@ -80,7 +118,7 @@ export default function ReservationWidget({
                 className="w-full text-xs font-semibold outline-hidden bg-transparent text-gray-900 mt-0.5 cursor-pointer"
               />
             </div>
-            <div className="p-2.5 hover:bg-gray-50 transition">
+            <div className="p-2.5 hover:bg-gray-50 transition rounded-tr-2xl">
               <label className="block text-[10px] font-extrabold uppercase text-gray-800 tracking-wider">
                 CHECKOUT
               </label>
@@ -94,12 +132,11 @@ export default function ReservationWidget({
             </div>
           </div>
 
-          {/* Guests dropdown trigger */}
-          <div className="relative">
-            <button
-              type="button"
+          {/* Guests Section with Direct Stepper Buttons */}
+          <div className="rounded-b-2xl">
+            <div
               onClick={() => setIsGuestDropdownOpen(!isGuestDropdownOpen)}
-              className="flex w-full items-center justify-between p-3 text-left hover:bg-gray-50 transition cursor-pointer"
+              className="flex items-center justify-between p-3 hover:bg-gray-50 transition cursor-pointer rounded-b-2xl"
             >
               <div>
                 <span className="block text-[10px] font-extrabold uppercase text-gray-800 tracking-wider">
@@ -107,46 +144,142 @@ export default function ReservationWidget({
                 </span>
                 <span className="text-xs font-semibold text-gray-900">
                   {guestsCount} guest{guestsCount > 1 ? "s" : ""}
+                  <span className="text-gray-400 font-normal ml-1">
+                    (max {maxCapacity})
+                  </span>
                 </span>
               </div>
-              <ChevronDown className="h-4 w-4 text-gray-500" />
-            </button>
 
-            {/* Dropdown popup */}
+              {/* Quick Stepper directly in the card */}
+              <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                <button
+                  type="button"
+                  disabled={guestsCount <= 1}
+                  onClick={handleDecrementAdults}
+                  className="flex h-7 w-7 items-center justify-center rounded-full border border-gray-300 text-gray-700 disabled:opacity-20 hover:border-black transition cursor-pointer disabled:cursor-not-allowed bg-white"
+                  title="Decrease guests"
+                >
+                  <Minus className="w-3.5 h-3.5" />
+                </button>
+
+                <span className="text-xs font-bold w-5 text-center text-gray-900">
+                  {guestsCount}
+                </span>
+
+                <button
+                  type="button"
+                  disabled={guestsCount >= maxCapacity}
+                  onClick={handleIncrementAdults}
+                  className="flex h-7 w-7 items-center justify-center rounded-full border border-gray-300 text-gray-700 disabled:opacity-20 hover:border-black transition cursor-pointer disabled:cursor-not-allowed bg-white"
+                  title="Increase guests"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setIsGuestDropdownOpen(!isGuestDropdownOpen)}
+                  className="p-1 text-gray-500 hover:text-black transition ml-1"
+                >
+                  {isGuestDropdownOpen ? (
+                    <ChevronUp className="h-4 w-4" />
+                  ) : (
+                    <ChevronDown className="h-4 w-4" />
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* Expandable Guest Options Drawer */}
             {isGuestDropdownOpen && (
-              <div className="absolute left-0 right-0 top-full z-20 mt-1 rounded-2xl border border-gray-200 bg-white p-4 shadow-xl animate-in fade-in duration-150">
+              <div className="border-t border-gray-200 bg-gray-50/70 p-4 space-y-4 rounded-b-2xl animate-in fade-in duration-150">
+                {/* Adults Stepper */}
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-xs font-bold text-gray-900">Guests</p>
-                    <p className="text-[11px] text-gray-500">Max {listing.max_guests} guests</p>
+                    <p className="text-xs font-bold text-gray-900">Adults</p>
+                    <p className="text-[11px] text-gray-500">Age 13+</p>
                   </div>
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2.5">
                     <button
                       type="button"
-                      disabled={guestsCount <= 1}
-                      onClick={() => setGuestsCount((prev) => Math.max(1, prev - 1))}
-                      className="flex h-7 w-7 items-center justify-center rounded-full border border-gray-300 text-gray-600 disabled:opacity-30 hover:border-black transition"
+                      disabled={adults <= 1}
+                      onClick={handleDecrementAdults}
+                      className="flex h-7 w-7 items-center justify-center rounded-full border border-gray-300 bg-white text-gray-700 disabled:opacity-25 hover:border-black transition cursor-pointer"
                     >
-                      -
+                      <Minus className="w-3.5 h-3.5" />
                     </button>
-                    <span className="text-xs font-bold w-4 text-center">{guestsCount}</span>
+                    <span className="text-xs font-bold w-4 text-center">{adults}</span>
                     <button
                       type="button"
-                      disabled={guestsCount >= listing.max_guests}
-                      onClick={() => setGuestsCount((prev) => Math.min(listing.max_guests, prev + 1))}
-                      className="flex h-7 w-7 items-center justify-center rounded-full border border-gray-300 text-gray-600 disabled:opacity-30 hover:border-black transition"
+                      disabled={adults + childrenCount >= maxCapacity}
+                      onClick={handleIncrementAdults}
+                      className="flex h-7 w-7 items-center justify-center rounded-full border border-gray-300 bg-white text-gray-700 disabled:opacity-25 hover:border-black transition cursor-pointer"
                     >
-                      +
+                      <Plus className="w-3.5 h-3.5" />
                     </button>
                   </div>
                 </div>
-                <div className="border-t mt-3 pt-2 text-right">
+
+                {/* Children Stepper */}
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs font-bold text-gray-900">Children</p>
+                    <p className="text-[11px] text-gray-500">Ages 2–12</p>
+                  </div>
+                  <div className="flex items-center gap-2.5">
+                    <button
+                      type="button"
+                      disabled={childrenCount <= 0}
+                      onClick={handleDecrementChildren}
+                      className="flex h-7 w-7 items-center justify-center rounded-full border border-gray-300 bg-white text-gray-700 disabled:opacity-25 hover:border-black transition cursor-pointer"
+                    >
+                      <Minus className="w-3.5 h-3.5" />
+                    </button>
+                    <span className="text-xs font-bold w-4 text-center">{childrenCount}</span>
+                    <button
+                      type="button"
+                      disabled={adults + childrenCount >= maxCapacity}
+                      onClick={handleIncrementChildren}
+                      className="flex h-7 w-7 items-center justify-center rounded-full border border-gray-300 bg-white text-gray-700 disabled:opacity-25 hover:border-black transition cursor-pointer"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Quick Presets */}
+                <div className="pt-2 border-t border-gray-200">
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">
+                    Quick Presets
+                  </p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {[1, 2, 4, maxCapacity].filter((v, i, a) => a.indexOf(v) === i && v <= maxCapacity).map((num) => (
+                      <button
+                        key={num}
+                        type="button"
+                        onClick={() => handleSetPreset(num)}
+                        className={`px-2.5 py-1 rounded-lg text-xs font-bold border transition cursor-pointer ${
+                          guestsCount === num
+                            ? "bg-black text-white border-black"
+                            : "bg-white text-gray-700 border-gray-200 hover:border-black"
+                        }`}
+                      >
+                        {num === 1 ? "1 Guest" : num === maxCapacity ? `Max (${num})` : `${num} Guests`}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="pt-1 flex items-center justify-between text-xs">
+                  <span className="text-[11px] text-gray-500">
+                    Max capacity: {maxCapacity} guests
+                  </span>
                   <button
                     type="button"
                     onClick={() => setIsGuestDropdownOpen(false)}
-                    className="text-xs font-bold text-black underline"
+                    className="font-bold text-black underline hover:text-[#FF385C] cursor-pointer"
                   >
-                    Close
+                    Done
                   </button>
                 </div>
               </div>
@@ -175,7 +308,7 @@ export default function ReservationWidget({
             ? "Dates unavailable"
             : isInvalidRange
             ? "Select valid dates"
-            : "Reserve"}
+            : `Reserve (${guestsCount} ${guestsCount === 1 ? "guest" : "guests"})`}
         </button>
 
         <p className="text-center text-xs text-gray-500">You won&apos;t be charged yet</p>
