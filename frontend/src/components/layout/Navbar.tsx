@@ -10,12 +10,11 @@ import {
   Luggage,
   Home,
   PlusCircle,
-  Sparkles,
-  Check,
   MessageSquare,
   ShieldCheck,
   Sun,
   Moon,
+  ArrowRightLeft,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useSearch } from "@/context/SearchContext";
@@ -23,7 +22,7 @@ import SearchModal from "./SearchModal";
 import IdentityVerificationModal from "@/components/auth/IdentityVerificationModal";
 
 export default function Navbar() {
-  const { user, isHost, toggleHostMode } = useAuth();
+  const { user, isHost, switchUser, toggleHostMode } = useAuth();
   const { filters, openSearchModal } = useSearch();
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -137,30 +136,26 @@ export default function Navbar() {
               </div>
             </div>
 
-            {/* Right Nav / Profile Menu */}
+            {/* Right Nav Controls */}
             <div className="flex items-center gap-2 relative" ref={menuRef}>
+              {/* Airbnb your home / Switch to traveling Button */}
               <button
                 onClick={toggleHostMode}
-                className="hidden md:flex items-center gap-1.5 rounded-full px-3.5 py-2 text-sm font-semibold text-gray-800 hover:bg-gray-100 transition cursor-pointer"
+                className="hidden md:flex items-center rounded-full px-4 py-2.5 text-sm font-semibold text-gray-800 hover:bg-gray-100 transition cursor-pointer"
               >
-                {isHost ? (
-                  <span className="text-xs bg-amber-100 text-amber-900 px-2 py-0.5 rounded-full font-bold flex items-center gap-1">
-                    <Sparkles className="w-3 h-3 text-amber-600" /> Host Mode
-                  </span>
-                ) : (
-                  "Airbnb your home"
-                )}
+                {isHost ? "Switch to traveling" : "Airbnb your home"}
               </button>
 
+              {/* Messages Link */}
               <Link
                 href="/messages"
                 className="hidden sm:flex rounded-full p-2.5 text-gray-700 hover:bg-gray-100 transition cursor-pointer"
-                title="Messages (Placeholder)"
+                title="Messages"
               >
                 <MessageSquare className="h-4 w-4" />
               </Link>
 
-              {/* Dark Mode Toggle Button */}
+              {/* Dark Mode Quick Toggle */}
               <button
                 onClick={toggleDarkMode}
                 className="rounded-full p-2.5 text-gray-700 hover:bg-gray-100 transition cursor-pointer"
@@ -173,10 +168,11 @@ export default function Navbar() {
                 )}
               </button>
 
-              {/* Profile Pill */}
+              {/* Authentic Airbnb User Menu Button */}
               <button
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
                 className="flex items-center gap-3 rounded-full border border-gray-300 py-1.5 px-3 hover:shadow-md transition cursor-pointer bg-white"
+                aria-expanded={isMenuOpen}
               >
                 <Menu className="h-4 w-4 text-gray-600" />
                 {user.avatar_url ? (
@@ -192,106 +188,146 @@ export default function Navbar() {
                 )}
               </button>
 
-              {/* Dropdown Menu */}
+              {/* Authentic Airbnb Dropdown Menu */}
               {isMenuOpen && (
-                <div className="absolute right-0 top-14 w-64 rounded-2xl border border-gray-200 bg-white py-2 shadow-xl z-50 animate-in fade-in slide-in-from-top-2 duration-150">
-                  {/* Current Active User Info */}
-                  <div className="px-4 py-2.5 border-b border-gray-100 bg-gray-50">
-                    <p className="text-xs text-gray-500">Active Profile ({isHost ? "Host" : "Guest"})</p>
-                    <p className="text-sm font-bold text-gray-900 flex items-center justify-between">
-                      {user.name}
-                      {user.is_superhost && (
-                        <span className="text-[10px] bg-red-100 text-[#FF385C] font-semibold px-1.5 py-0.5 rounded-full">
-                          Superhost
-                        </span>
-                      )}
-                    </p>
-                    <p className="text-xs text-gray-500 truncate">{user.email}</p>
-                  </div>
+                <div className="absolute right-0 top-14 w-60 rounded-2xl border border-gray-200 bg-white py-2 shadow-xl z-50 animate-in fade-in slide-in-from-top-2 duration-150 divide-y divide-gray-100">
+                  {/* Mode-Specific Sections */}
+                  {isHost ? (
+                    /* HOST MODE MENU */
+                    <>
+                      <div className="px-4 py-2.5 bg-gray-50/70">
+                        <p className="text-xs text-gray-500 font-medium">Hosting as</p>
+                        <p className="text-sm font-bold text-gray-900 truncate flex items-center gap-1.5 mt-0.5">
+                          {user.name}
+                          <span className="text-[10px] bg-red-100 text-[#FF385C] font-bold px-1.5 py-0.2 rounded-full">
+                            Superhost
+                          </span>
+                        </p>
+                      </div>
 
-                  {/* Switch Role Quick Toggle */}
-                  <div className="px-3 py-2 border-b border-gray-100">
-                    <button
-                      onClick={() => {
-                        toggleHostMode();
-                        setIsMenuOpen(false);
-                      }}
-                      className="w-full text-left text-xs font-semibold px-2 py-1.5 rounded-lg bg-pink-50 text-[#FF385C] hover:bg-pink-100 transition flex items-center justify-between cursor-pointer"
-                    >
-                      <span>Switch to {isHost ? "Guest Mode (Alex)" : "Host Mode (Elena)"}</span>
-                      <Check className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
+                      <div className="py-1">
+                        <Link
+                          href="/host/dashboard"
+                          onClick={() => setIsMenuOpen(false)}
+                          className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-gray-800 hover:bg-gray-50 transition"
+                        >
+                          <Home className="w-4 h-4 text-gray-500" />
+                          Host dashboard
+                        </Link>
+                        <Link
+                          href="/host/create"
+                          onClick={() => setIsMenuOpen(false)}
+                          className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-gray-800 hover:bg-gray-50 transition"
+                        >
+                          <PlusCircle className="w-4 h-4 text-gray-500" />
+                          Create a new listing
+                        </Link>
+                        <Link
+                          href="/messages"
+                          onClick={() => setIsMenuOpen(false)}
+                          className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-gray-800 hover:bg-gray-50 transition"
+                        >
+                          <MessageSquare className="w-4 h-4 text-gray-500" />
+                          Messages
+                        </Link>
+                      </div>
 
-                  {/* Links */}
+                      <div className="py-1">
+                        <button
+                          onClick={() => {
+                            toggleHostMode();
+                            setIsMenuOpen(false);
+                          }}
+                          className="w-full text-left flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-[#FF385C] hover:bg-pink-50/50 transition cursor-pointer"
+                        >
+                          <ArrowRightLeft className="w-4 h-4 text-[#FF385C]" />
+                          Switch to traveling
+                        </button>
+                      </div>
+                    </>
+                  ) : (
+                    /* GUEST MODE MENU */
+                    <>
+                      <div className="py-1">
+                        <Link
+                          href="/trips"
+                          onClick={() => setIsMenuOpen(false)}
+                          className="flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-gray-900 hover:bg-gray-50 transition"
+                        >
+                          <Luggage className="w-4 h-4 text-gray-600" />
+                          Trips
+                        </Link>
+                        <Link
+                          href="/wishlists"
+                          onClick={() => setIsMenuOpen(false)}
+                          className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-gray-800 hover:bg-gray-50 transition"
+                        >
+                          <Heart className="w-4 h-4 text-gray-600" />
+                          Wishlists
+                        </Link>
+                        <Link
+                          href="/messages"
+                          onClick={() => setIsMenuOpen(false)}
+                          className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-gray-800 hover:bg-gray-50 transition"
+                        >
+                          <MessageSquare className="w-4 h-4 text-gray-600" />
+                          Messages
+                        </Link>
+                      </div>
+
+                      <div className="py-1">
+                        <button
+                          onClick={() => {
+                            toggleHostMode();
+                            setIsMenuOpen(false);
+                          }}
+                          className="w-full text-left flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-gray-800 hover:bg-gray-50 transition cursor-pointer"
+                        >
+                          <Home className="w-4 h-4 text-gray-600" />
+                          Airbnb your home
+                        </button>
+                        <button
+                          onClick={() => {
+                            setIsIdentityModalOpen(true);
+                            setIsMenuOpen(false);
+                          }}
+                          className="w-full text-left flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-gray-800 hover:bg-gray-50 transition cursor-pointer"
+                        >
+                          <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                          Identity verification
+                        </button>
+                      </div>
+                    </>
+                  )}
+
+                  {/* Shared Settings & Preferences */}
                   <div className="py-1">
-                    <Link
-                      href="/messages"
-                      onClick={() => setIsMenuOpen(false)}
-                      className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition"
-                    >
-                      <MessageSquare className="w-4 h-4 text-gray-500" />
-                      Messages
-                      <span className="ml-auto text-[10px] bg-pink-100 text-[#FF385C] font-bold px-1.5 py-0.2 rounded-full">
-                        Demo
-                      </span>
-                    </Link>
-                    <Link
-                      href="/trips"
-                      onClick={() => setIsMenuOpen(false)}
-                      className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition"
-                    >
-                      <Luggage className="w-4 h-4 text-gray-500" />
-                      My Trips
-                    </Link>
-                    <Link
-                      href="/wishlists"
-                      onClick={() => setIsMenuOpen(false)}
-                      className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition"
-                    >
-                      <Heart className="w-4 h-4 text-gray-500" />
-                      Wishlists
-                    </Link>
-                    <button
-                      onClick={() => {
-                        setIsIdentityModalOpen(true);
-                        setIsMenuOpen(false);
-                      }}
-                      className="w-full text-left flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition cursor-pointer"
-                    >
-                      <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                      Identity Verification
-                      <span className="ml-auto text-[10px] text-emerald-600 font-bold">Verified ✓</span>
-                    </button>
                     <button
                       onClick={toggleDarkMode}
-                      className="w-full text-left flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition cursor-pointer"
+                      className="w-full text-left flex items-center justify-between px-4 py-2.5 text-sm font-medium text-gray-800 hover:bg-gray-50 transition cursor-pointer"
                     >
-                      {isDarkMode ? <Sun className="w-4 h-4 text-amber-500" /> : <Moon className="w-4 h-4 text-gray-500" />}
-                      <span>{isDarkMode ? "Light Mode" : "Dark Mode"}</span>
+                      <div className="flex items-center gap-3">
+                        {isDarkMode ? (
+                          <Sun className="w-4 h-4 text-amber-500" />
+                        ) : (
+                          <Moon className="w-4 h-4 text-gray-600" />
+                        )}
+                        <span>{isDarkMode ? "Light theme" : "Dark theme"}</span>
+                      </div>
                     </button>
-                  </div>
 
-                  <div className="border-t border-gray-100 py-1">
-                    <div className="px-4 py-1 text-[11px] font-bold text-gray-400 uppercase tracking-wider">
-                      Hosting
+                    <div className="px-4 py-2 text-xs text-gray-500 flex items-center justify-between">
+                      <span className="truncate">{user.email}</span>
+                      <button
+                        onClick={() => {
+                          toggleHostMode();
+                          setIsMenuOpen(false);
+                        }}
+                        className="text-[#FF385C] font-semibold hover:underline cursor-pointer ml-2 shrink-0"
+                      >
+                        Switch user
+                      </button>
                     </div>
-                    <Link
-                      href="/host/dashboard"
-                      onClick={() => setIsMenuOpen(false)}
-                      className="flex items-center gap-3 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition"
-                    >
-                      <Home className="w-4 h-4 text-gray-500" />
-                      Host Dashboard
-                    </Link>
-                    <Link
-                      href="/host/create"
-                      onClick={() => setIsMenuOpen(false)}
-                      className="flex items-center gap-3 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition"
-                    >
-                      <PlusCircle className="w-4 h-4 text-gray-500" />
-                      Create a Listing
-                    </Link>
                   </div>
                 </div>
               )}

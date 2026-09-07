@@ -3,7 +3,6 @@
 import React, { useEffect, useRef } from "react";
 import { ListingCard } from "@/types";
 import { formatPrice } from "@/lib/utils";
-import Link from "next/link";
 
 interface MapViewProps {
   listings: ListingCard[];
@@ -57,10 +56,10 @@ export default function MapView({
       );
       mapInstanceRef.current = map;
 
-      // Clean OpenStreetMap CartoDB Positron / standard tile layer
-      L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
+      // Standard OpenStreetMap tile layer (100% free, open, NO API key required, zero watermarks)
+      L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
         attribution:
-          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
         maxZoom: 19,
       }).addTo(map);
 
@@ -95,6 +94,16 @@ export default function MapView({
 
         marker.bindPopup(popupContent);
       });
+
+      // If single listing view, also add a subtle circle around the general location
+      if (singleListing && listings.length > 0) {
+        L.circle([listings[0].latitude, listings[0].longitude], {
+          color: "#FF385C",
+          fillColor: "#FF385C",
+          fillOpacity: 0.15,
+          radius: 800,
+        }).addTo(map);
+      }
     });
 
     return () => {
@@ -104,11 +113,13 @@ export default function MapView({
         mapInstanceRef.current = null;
       }
     };
-  }, [listings, singleListing, zoom]);
+  }, [listings, center, zoom, singleListing]);
 
   return (
-    <div className="relative w-full rounded-3xl overflow-hidden shadow-md border border-gray-200">
-      <div ref={mapContainerRef} style={{ height }} className="w-full z-0" />
-    </div>
+    <div
+      ref={mapContainerRef}
+      style={{ height, width: "100%" }}
+      className="rounded-3xl overflow-hidden shadow-md z-10 border border-gray-200"
+    />
   );
 }
