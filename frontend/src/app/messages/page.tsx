@@ -1,17 +1,37 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { MessageSquare, Send, Sparkles, ChevronLeft, CheckCircle2, Clock } from "lucide-react";
+import { Send, ChevronLeft, CheckCircle2, Clock, Check } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import toast from "react-hot-toast";
 
+interface MessageItem {
+  sender: string;
+  text: string;
+  time: string;
+  isHost: boolean;
+  status?: string;
+}
+
+interface Conversation {
+  id: number;
+  hostName: string;
+  hostAvatar: string;
+  listing: string;
+  lastMessage: string;
+  time: string;
+  responseTime: string;
+  messages: MessageItem[];
+}
+
 export default function MessagesPage() {
-  const { user } = useAuth();
+  const { user, isHost } = useAuth();
   const [activeConversation, setActiveConversation] = useState(0);
   const [inputText, setInputText] = useState("");
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const conversations = [
+  const [conversations, setConversations] = useState<Conversation[]>([
     {
       id: 1,
       hostName: "Elena Rostova",
@@ -22,9 +42,9 @@ export default function MessagesPage() {
       responseTime: "Generally replies in an hour",
       messages: [
         { sender: "Elena Rostova", text: "Hello! Thank you for booking our Caldera Villa.", time: "10:30 AM", isHost: true },
-        { sender: user.name, text: "Hi Elena! What is the check-in process like?", time: "10:45 AM", isHost: false },
-        { sender: "Elena Rostova", text: "Looking forward to hosting you in Oia! Let me know if you need airport transfer.", time: "11:00 AM", isHost: true }
-      ]
+        { sender: "Alex Rivera", text: "Hi Elena! What is the check-in process like?", time: "10:45 AM", isHost: false },
+        { sender: "Elena Rostova", text: "Looking forward to hosting you in Oia! Let me know if you need airport transfer.", time: "11:00 AM", isHost: true },
+      ],
     },
     {
       id: 2,
@@ -36,34 +56,50 @@ export default function MessagesPage() {
       responseTime: "Generally replies in an hour",
       messages: [
         { sender: "Liam Vance", text: "Welcome to Big Sur! The redwood trails are beautiful right now.", time: "Yesterday", isHost: true },
-        { sender: "Liam Vance", text: "The hot tub is heated and ready for your arrival this weekend!", time: "Yesterday", isHost: true }
-      ]
-    }
-  ];
+        { sender: "Liam Vance", text: "The hot tub is heated and ready for your arrival this weekend!", time: "Yesterday", isHost: true },
+      ],
+    },
+  ]);
 
   const current = conversations[activeConversation];
-  const [chatMessages, setChatMessages] = useState(current.messages);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [current.messages]);
 
   const handleSelectConversation = (idx: number) => {
     setActiveConversation(idx);
-    setChatMessages(conversations[idx].messages);
   };
 
   const handleSend = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!inputText.trim()) return;
+    const text = inputText.trim();
+    if (!text) return;
 
-    const userMsg = { sender: user.name, text: inputText.trim(), time: "Just now", isHost: false };
-    setChatMessages((prev) => [...prev, userMsg]);
+    const newMsg: MessageItem = {
+      sender: user.name,
+      text,
+      time: "Just now",
+      isHost: isHost,
+      status: "Delivered",
+    };
+
+    setConversations((prev) =>
+      prev.map((c, idx) => {
+        if (idx === activeConversation) {
+          return {
+            ...c,
+            lastMessage: text,
+            time: "Just now",
+            messages: [...c.messages, newMsg],
+          };
+        }
+        return c;
+      })
+    );
+
     setInputText("");
-    toast.success("Message sent!");
-
-    setTimeout(() => {
-      setChatMessages((prev) => [
-        ...prev,
-        { sender: current.hostName, text: "Got it! Thanks for the update.", time: "Just now", isHost: true }
-      ]);
-    }, 1200);
+    toast.success("Message sent");
   };
 
   return (
@@ -113,7 +149,7 @@ export default function MessagesPage() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-baseline justify-between">
                     <h4 className="text-sm font-bold text-gray-900 truncate">{conv.hostName}</h4>
-                    <span className="text-[10px] text-gray-400">{conv.time}</span>
+                    <span className="text-[10px] text-gray-400 shrink-0 ml-1">{conv.time}</span>
                   </div>
                   <p className="text-[11px] font-semibold text-[#FF385C] truncate mt-0.5">
                     {conv.listing}
@@ -126,7 +162,7 @@ export default function MessagesPage() {
 
           {/* Active Chat Thread */}
           <div className="md:col-span-8 flex flex-col h-[550px]">
-            {/* Chat Header with "User generally replies in an hour" */}
+            {/* Chat Header */}
             <div className="p-4 border-b border-gray-200 flex items-center justify-between bg-white">
               <div className="flex items-center gap-3">
                 <img
@@ -167,23 +203,34 @@ export default function MessagesPage() {
 
             {/* Chat Messages */}
             <div className="flex-1 p-6 overflow-y-auto space-y-4 bg-gray-50/40">
-              {chatMessages.map((msg, i) => (
-                <div
-                  key={i}
-                  className={`flex flex-col ${msg.isHost ? "items-start" : "items-end"}`}
-                >
+              {current.messages.map((msg, i) => {
+                const isSentByMe = isHost ? msg.isHost : !msg.isHost;
+                return (
                   <div
-                    className={`max-w-[75%] rounded-2xl p-3.5 text-sm shadow-xs ${
-                      msg.isHost
-                        ? "bg-white text-gray-800 border border-gray-200 rounded-tl-xs"
-                        : "bg-[#FF385C] text-white rounded-tr-xs"
-                    }`}
+                    key={i}
+                    className={`flex flex-col ${isSentByMe ? "items-end" : "items-start"}`}
                   >
-                    <p>{msg.text}</p>
+                    <div
+                      className={`max-w-[80%] rounded-2xl p-3.5 text-sm shadow-xs break-words overflow-hidden ${
+                        isSentByMe
+                          ? "bg-[#FF385C] text-white rounded-tr-xs"
+                          : "bg-white text-gray-800 border border-gray-200 rounded-tl-xs"
+                      }`}
+                    >
+                      <p className="break-all whitespace-pre-wrap">{msg.text}</p>
+                    </div>
+                    <div className="flex items-center gap-1 text-[10px] text-gray-400 mt-1 px-1">
+                      <span>{msg.time}</span>
+                      {isSentByMe && (
+                        <span className="inline-flex items-center gap-0.5 text-gray-400">
+                          · Delivered <Check className="w-2.5 h-2.5 inline" />
+                        </span>
+                      )}
+                    </div>
                   </div>
-                  <span className="text-[10px] text-gray-400 mt-1 px-1">{msg.time}</span>
-                </div>
-              ))}
+                );
+              })}
+              <div ref={messagesEndRef} />
             </div>
 
             {/* Message Input Form */}

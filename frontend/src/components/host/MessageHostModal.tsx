@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { X, Send, Sparkles, Clock, CheckCircle2 } from "lucide-react";
+import { X, Send, Sparkles, Clock, CheckCircle2, Check } from "lucide-react";
 import { User } from "@/types";
 import { useAuth } from "@/context/AuthContext";
 import toast from "react-hot-toast";
@@ -48,18 +48,6 @@ export default function MessageHostModal({
     setSentMessages((prev) => [...prev, newMsg]);
     setMessage("");
     toast.success(`Message sent to ${host?.name || "Host"}!`);
-
-    setTimeout(() => {
-      setSentMessages((prev) => [
-        ...prev,
-        {
-          sender: host?.name || "Host",
-          text: "Thanks for reaching out! I generally reply in an hour. Looking forward to hosting you!",
-          time: "Just now",
-          fromHost: true,
-        },
-      ]);
-    }, 1000);
   };
 
   const quickQuestions = [
@@ -117,15 +105,22 @@ export default function MessageHostModal({
               className={`flex flex-col ${msg.fromHost ? "items-start" : "items-end"}`}
             >
               <div
-                className={`max-w-[80%] rounded-2xl p-3.5 text-sm shadow-xs ${
+                className={`max-w-[80%] rounded-2xl p-3.5 text-sm shadow-xs break-words ${
                   msg.fromHost
                     ? "bg-white text-gray-800 border border-gray-200 rounded-tl-xs"
                     : "bg-[#FF385C] text-white rounded-tr-xs"
                 }`}
               >
-                <p>{msg.text}</p>
+                <p className="break-all whitespace-pre-wrap">{msg.text}</p>
               </div>
-              <span className="text-[10px] text-gray-400 mt-1 px-1">{msg.time}</span>
+              <div className="flex items-center gap-1 text-[10px] text-gray-400 mt-1 px-1">
+                <span>{msg.time}</span>
+                {!msg.fromHost && (
+                  <span className="inline-flex items-center gap-0.5 text-gray-400">
+                    · Delivered <Check className="w-2.5 h-2.5 inline" />
+                  </span>
+                )}
+              </div>
             </div>
           ))}
         </div>
