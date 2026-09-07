@@ -1,5 +1,8 @@
 # Airbnb Web Application Clone (Fullstack SDE Assignment)
 
+> **🚀 Live Demo**: [https://frontend-qigobdd1k-nishika841s-projects.vercel.app](https://frontend-qigobdd1k-nishika841s-projects.vercel.app)  
+> **📦 GitHub Repository**: [https://github.com/nishika841/airbnb-clone](https://github.com/nishika841/airbnb-clone)
+
 A production-grade, fullstack clone of [Airbnb](https://www.airbnb.com) that replicates Airbnb's iconic design, user experience, and core browse, search, booking, and host workflows.
 
 Built with **Next.js 16 (App Router, TypeScript, Tailwind CSS)** on the frontend, **Python 3.13 (FastAPI, SQLAlchemy, Pydantic)** on the backend, and **SQLite** for relational persistence.
