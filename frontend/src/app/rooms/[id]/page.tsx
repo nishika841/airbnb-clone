@@ -51,16 +51,27 @@ export default function RoomDetailPage({ params }: PageProps) {
 
   const loadData = async () => {
     try {
-      const [listingData, datesData, reviewsData] = await Promise.all([
-        fetchListing(listingId, user.id),
-        fetchBookedDates(listingId),
-        fetchReviews(listingId),
-      ]);
+      const listingData = await fetchListing(listingId, user.id);
       setListing(listingData);
-      setBookedDates(datesData);
-      setReviewsSummary(reviewsData);
-    } catch {
-      toast.error("Failed to load property details");
+      setLoading(false);
+
+      // Supplementary data
+      try {
+        const datesData = await fetchBookedDates(listingId);
+        setBookedDates(datesData);
+      } catch {
+        setBookedDates([]);
+      }
+
+      try {
+        const reviewsData = await fetchReviews(listingId);
+        setReviewsSummary(reviewsData);
+      } catch {
+        // keep null or fallback
+      }
+    } catch (err) {
+      console.warn("Failed to load listing details:", err);
+      toast.error("Failed to load listing");
     } finally {
       setLoading(false);
     }

@@ -9,17 +9,18 @@ import { ListingCard, SearchFilterState } from "@/types";
 import { useAuth } from "@/context/AuthContext";
 import { useSearch } from "@/context/SearchContext";
 import { Map, List, ChevronLeft, ChevronRight, X, Search, RotateCcw } from "lucide-react";
+import { FALLBACK_LISTINGS } from "@/data/fallbackData";
 
 export default function HomePage() {
   const { user } = useAuth();
   const { filters, updateFilter, clearFilters, openSearchModal } = useSearch();
 
-  const [listings, setListings] = useState<ListingCard[]>([]);
-  const [totalListings, setTotalListings] = useState(0);
-  const [loading, setLoading] = useState(true);
+  const [listings, setListings] = useState<ListingCard[]>(FALLBACK_LISTINGS.slice(0, 8));
+  const [totalListings, setTotalListings] = useState(FALLBACK_LISTINGS.length);
+  const [loading, setLoading] = useState(false);
   const [showMap, setShowMap] = useState(false);
   const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
+  const [totalPages, setTotalPages] = useState(Math.ceil(FALLBACK_LISTINGS.length / 8));
   const limit = 8;
 
   const loadListings = useCallback(
@@ -30,10 +31,8 @@ export default function HomePage() {
         setListings(res.listings);
         setTotalListings(res.total);
         setTotalPages(res.total_pages);
-      } catch {
-        setListings([]);
-        setTotalListings(0);
-        setTotalPages(1);
+      } catch (err) {
+        console.warn("Could not sync with backend, retaining stays:", err);
       } finally {
         setLoading(false);
       }
