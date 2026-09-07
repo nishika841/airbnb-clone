@@ -1,0 +1,47 @@
+@import "tailwindcss";
+
+:root {
+  --airbnb-primary: #FF385C;
+  --airbnb-hover: #E00B41;
+  --airbnb-text: #222222;
+  --airbnb-secondary: #717171;
+  --airbnb-border: #DDDDDD;
+  --airbnb-light-bg: #F7F7F7;
+}
+
+body {
+  color: var(--airbnb-text);
+  background-color: #ffffff;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Hide scrollbar for category carousel */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Custom leaflet pin styles */
+.airbnb-price-pin {
+  background: white;
+  color: #222222;
+  font-weight: 700;
+  font-size: 13px;
+  padding: 4px 8px;
+  border-radius: 20px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.22);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  white-space: nowrap;
+  transition: transform 0.15s ease, background-color 0.15s ease, color 0.15s ease;
+  cursor: pointer;
+}
+.airbnb-price-pin:hover, .airbnb-price-pin.active {
+  background: #222222;
+  color: white;
+  transform: scale(1.1);
+  z-index: 999;
+}
