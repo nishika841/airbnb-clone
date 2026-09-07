@@ -2,7 +2,7 @@ services:
   # FastAPI Backend Service
   - type: web
     name: airbnb-backend
-    env: python
+    runtime: python
     region: oregon
     plan: free
     rootDir: backend
@@ -15,7 +15,7 @@ services:
   # Next.js Frontend Service
   - type: web
     name: airbnb-frontend
-    env: node
+    runtime: node
     region: oregon
     plan: free
     rootDir: frontend
