@@ -15,6 +15,7 @@ import {
   ChevronLeft,
   MessageSquare,
   CheckCircle2,
+  Clock,
 } from "lucide-react";
 import { fetchListing, fetchBookedDates, fetchReviews } from "@/lib/api";
 import { ListingDetail, BookedDateRange, ReviewsSummary as ReviewsSummaryType } from "@/types";
@@ -34,9 +35,10 @@ interface PageProps {
   params: Promise<{ id: string }>;
 }
 
-export default function ListingDetailPage({ params }: PageProps) {
-  const resolvedParams = use(params);
-  const listingId = Number(resolvedParams.id);
+export default function RoomDetailPage({ params }: PageProps) {
+  const { id } = use(params);
+  const listingId = parseInt(id, 10);
+
   const { user } = useAuth();
   const { isWishlisted, toggle } = useWishlist();
 
@@ -65,29 +67,29 @@ export default function ListingDetailPage({ params }: PageProps) {
   };
 
   useEffect(() => {
-    if (listingId) {
-      loadData();
-    }
+    loadData();
   }, [listingId, user.id]);
 
   if (loading) {
     return (
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10 space-y-6 animate-pulse">
-        <div className="h-8 w-2/3 bg-gray-200 rounded-lg" />
-        <div className="h-4 w-1/3 bg-gray-200 rounded-lg" />
-        <div className="h-[440px] w-full bg-gray-200 rounded-3xl" />
+      <div className="min-h-screen bg-white">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10 animate-pulse space-y-6">
+          <div className="h-8 bg-gray-200 rounded-xl w-2/3" />
+          <div className="h-4 bg-gray-200 rounded-md w-1/3" />
+          <div className="h-96 bg-gray-200 rounded-3xl" />
+        </div>
       </div>
     );
   }
 
   if (!listing) {
     return (
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-20 text-center">
-        <h2 className="text-2xl font-bold text-gray-900">Listing not found</h2>
-        <p className="mt-2 text-sm text-gray-500">The property you are looking for does not exist or has been removed.</p>
+      <div className="min-h-screen flex flex-col items-center justify-center bg-white p-4">
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">Listing not found</h2>
+        <p className="text-sm text-gray-500 mb-6">The stay you are looking for does not exist or has been removed.</p>
         <Link
           href="/"
-          className="mt-6 inline-block rounded-xl bg-black px-6 py-2.5 text-sm font-bold text-white hover:bg-gray-800"
+          className="rounded-full bg-black text-white px-6 py-2.5 text-xs font-bold hover:bg-gray-800 transition"
         >
           Return to Explore
         </Link>
@@ -95,77 +97,80 @@ export default function ListingDetailPage({ params }: PageProps) {
     );
   }
 
-  const favorited = isWishlisted(listing.id);
+  const wishlisted = isWishlisted(listing.id);
 
   const handleShare = () => {
-    if (typeof window !== "undefined" && navigator.clipboard) {
+    if (navigator.clipboard) {
       navigator.clipboard.writeText(window.location.href);
-      toast.success("Link copied to clipboard! 📋");
+      toast.success("Link copied to clipboard!");
     }
   };
 
   return (
-    <div className="min-h-screen bg-white pb-20">
+    <div className="min-h-screen bg-white pb-24">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-6">
-        {/* Breadcrumb */}
-        <Link
-          href="/"
-          className="inline-flex items-center gap-1.5 text-xs font-bold text-gray-600 hover:text-black mb-4 transition"
-        >
-          <ChevronLeft className="w-4 h-4" /> Back to Explore
-        </Link>
-
-        {/* Title & Actions Bar */}
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-6">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-black text-gray-900 leading-tight">
-              {listing.title}
-            </h1>
-            <div className="mt-2 flex flex-wrap items-center gap-3 text-xs sm:text-sm font-semibold text-gray-800">
-              <span className="flex items-center gap-1 text-gray-900">
-                <Star className="h-4 w-4 fill-black text-black" />
-                <span>{listing.rating.toFixed(2)}</span>
-              </span>
-              <span className="text-gray-400">·</span>
-              <span className="underline cursor-pointer">{listing.reviews_count} reviews</span>
-              {listing.host?.is_superhost && (
-                <>
-                  <span className="text-gray-400">·</span>
-                  <span className="flex items-center gap-1 text-gray-700">
-                    <Award className="h-4 w-4 text-[#FF385C]" /> Superhost
-                  </span>
-                </>
-              )}
-              <span className="text-gray-400">·</span>
-              <span className="text-gray-600 underline">{listing.location}</span>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-4 text-xs sm:text-sm font-semibold text-gray-800 shrink-0">
+        {/* Top navigation helper */}
+        <div className="flex items-center justify-between mb-4">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-1.5 text-xs font-bold text-gray-600 hover:text-black transition"
+          >
+            <ChevronLeft className="w-4 h-4" /> All stays
+          </Link>
+          <div className="flex items-center gap-4 text-xs font-semibold text-gray-800">
             <button
               onClick={handleShare}
-              className="flex items-center gap-2 rounded-lg px-3 py-2 hover:bg-gray-100 transition cursor-pointer"
+              className="flex items-center gap-1.5 hover:underline cursor-pointer"
             >
-              <Share2 className="w-4 h-4" /> Share
+              <Share2 className="w-3.5 h-3.5" /> Share
             </button>
             <button
               onClick={() => toggle(listing.id)}
-              className="flex items-center gap-2 rounded-lg px-3 py-2 hover:bg-gray-100 transition cursor-pointer"
+              className="flex items-center gap-1.5 hover:underline cursor-pointer"
             >
               <Heart
-                className={`w-4 h-4 ${
-                  favorited ? "fill-[#FF385C] text-[#FF385C]" : "text-gray-800"
+                className={`w-3.5 h-3.5 ${
+                  wishlisted ? "fill-[#FF385C] text-[#FF385C]" : "text-gray-800"
                 }`}
               />
-              {favorited ? "Saved" : "Save"}
+              {wishlisted ? "Saved" : "Save"}
             </button>
+          </div>
+        </div>
+
+        {/* Listing Title Header */}
+        <div className="space-y-2 mb-6">
+          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-gray-900">
+            {listing.title}
+          </h1>
+          <div className="flex flex-wrap items-center justify-between gap-4 text-xs font-medium text-gray-600">
+            <div className="flex items-center gap-2">
+              <span className="flex items-center gap-1 font-bold text-gray-900">
+                <Star className="w-3.5 h-3.5 fill-black text-black" />
+                {listing.rating.toFixed(2)}
+              </span>
+              <span>·</span>
+              <span className="underline font-semibold text-gray-900">
+                {listing.reviews_count} reviews
+              </span>
+              <span>·</span>
+              {listing.host?.is_superhost && (
+                <>
+                  <span className="flex items-center gap-1 text-[#FF385C] font-semibold">
+                    <Award className="w-3.5 h-3.5" /> Superhost
+                  </span>
+                  <span>·</span>
+                </>
+              )}
+              <span className="underline font-semibold text-gray-800">{listing.location}</span>
+            </div>
           </div>
         </div>
 
         {/* 5-Photo Mosaic Gallery */}
         <PhotoGallery images={listing.images} title={listing.title} />
 
-        {/* 2-Column Details & Sticky Booking Widget */}
+        {/* Details & Booking Layout */}
         <div className="mt-10 grid grid-cols-1 lg:grid-cols-12 gap-12">
           {/* Left Column */}
           <div className="lg:col-span-7 space-y-8 divide-y divide-gray-200">
@@ -185,7 +190,16 @@ export default function ListingDetailPage({ params }: PageProps) {
                   </span>
                 </div>
 
-                {/* Contact Host Button (Messaging placeholder) */}
+                {/* Host Response Time Badge */}
+                <div className="mt-2 flex items-center gap-2 text-xs text-gray-500">
+                  <span className="text-emerald-700 font-semibold flex items-center gap-1">
+                    <Clock className="w-3.5 h-3.5 text-emerald-600" /> Generally replies in an hour
+                  </span>
+                  <span>·</span>
+                  <span>Response rate: 100%</span>
+                </div>
+
+                {/* Contact Host Button */}
                 <button
                   onClick={() => setIsMessageHostOpen(true)}
                   className="mt-3.5 inline-flex items-center gap-2 rounded-xl border border-gray-300 px-4 py-2 text-xs font-bold text-gray-800 hover:border-black hover:bg-gray-50 transition cursor-pointer"
