@@ -1,6 +1,8 @@
 # Airbnb Web Application Clone (Fullstack SDE Assignment)
 
-> **🚀 Live Demo**: [https://frontend-qigobdd1k-nishika841s-projects.vercel.app](https://frontend-qigobdd1k-nishika841s-projects.vercel.app)  
+> **🚀 Live Web App**: [https://frontend-nishika841s-projects.vercel.app](https://frontend-nishika841s-projects.vercel.app) (Alternate: [https://frontend-blush-delta-epoq65io45.vercel.app](https://frontend-blush-delta-epoq65io45.vercel.app))  
+> **⚡ Live Backend API**: [https://backend-nishika841s-projects.vercel.app](https://backend-nishika841s-projects.vercel.app)  
+> **📖 Swagger API Documentation**: [https://backend-nishika841s-projects.vercel.app/docs](https://backend-nishika841s-projects.vercel.app/docs)  
 > **📦 GitHub Repository**: [https://github.com/nishika841/airbnb-clone](https://github.com/nishika841/airbnb-clone)
 
 A production-grade, fullstack clone of [Airbnb](https://www.airbnb.com) that replicates Airbnb's iconic design, user experience, and core browse, search, booking, and host workflows.
