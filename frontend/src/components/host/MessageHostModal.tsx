@@ -1,0 +1,163 @@
+﻿"use client";
+
+import React, { useState } from "react";
+import { X, Send, Sparkles } from "lucide-react";
+import { User } from "@/types";
+import { useAuth } from "@/context/AuthContext";
+import toast from "react-hot-toast";
+
+interface MessageHostModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  host?: User;
+  listingTitle: string;
+}
+
+export default function MessageHostModal({
+  isOpen,
+  onClose,
+  host,
+  listingTitle,
+}: MessageHostModalProps) {
+  const { user } = useAuth();
+  const [message, setMessage] = useState("");
+  const [sentMessages, setSentMessages] = useState<
+    { sender: string; text: string; time: string; fromHost?: boolean }[]
+  >([
+    {
+      sender: host?.name || "Host",
+      text: `Hello ${user.name}! Thank you for your interest in ${listingTitle}. Feel free to ask any questions about your upcoming stay!`,
+      time: "Today, 10:30 AM",
+      fromHost: true,
+    },
+  ]);
+
+  if (!isOpen) return null;
+
+  const handleSend = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!message.trim()) return;
+
+    const newMsg = {
+      sender: user.name,
+      text: message.trim(),
+      time: "Just now",
+      fromHost: false,
+    };
+
+    setSentMessages((prev) => [...prev, newMsg]);
+    setMessage("");
+    toast.success(`Message sent to ${host?.name || "Host"}!`);
+
+    setTimeout(() => {
+      setSentMessages((prev) => [
+        ...prev,
+        {
+          sender: host?.name || "Host",
+          text: "Thanks for reaching out! I typically respond within an hour. Looking forward to hosting you!",
+          time: "Just now",
+          fromHost: true,
+        },
+      ]);
+    }, 1000);
+  };
+
+  const quickQuestions = [
+    "Is early check-in possible?",
+    "Is high-speed wifi suitable for video calls?",
+    "Are pets allowed with a pet fee?",
+  ];
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4 animate-in fade-in duration-200">
+      <div className="w-full max-w-lg rounded-3xl bg-white shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+        <div className="flex items-center justify-between border-b px-6 py-4">
+          <div className="flex items-center gap-3">
+            <img
+              src={host?.avatar_url || "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80"}
+              alt={host?.name || "Host"}
+              className="h-10 w-10 rounded-full object-cover ring-2 ring-gray-100"
+            />
+            <div>
+              <h3 className="text-sm font-bold text-gray-900 flex items-center gap-1.5">
+                Message {host?.name || "Host"}
+                {host?.is_superhost && (
+                  <span className="text-[10px] bg-red-100 text-[#FF385C] font-semibold px-1.5 py-0.2 rounded-full">
+                    Superhost
+                  </span>
+                )}
+              </h3>
+              <p className="text-xs text-gray-500 truncate max-w-[240px]">{listingTitle}</p>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="rounded-full p-2 hover:bg-gray-100 transition text-gray-500 cursor-pointer"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        <div className="bg-pink-50 px-6 py-2 border-b border-pink-100 flex items-center justify-between text-xs text-gray-700">
+          <span className="flex items-center gap-1.5 font-medium text-[#FF385C]">
+            <Sparkles className="w-3.5 h-3.5" /> Guest-to-Host Messaging
+          </span>
+          <span className="text-[11px] bg-white border border-pink-200 text-gray-600 px-2 py-0.5 rounded-full font-semibold">
+            Demo Mode (Real-time socket chat coming soon)
+          </span>
+        </div>
+
+        <div className="p-6 overflow-y-auto space-y-4 flex-1 min-h-[220px] max-h-[340px] bg-gray-50/50">
+          {sentMessages.map((msg, idx) => (
+            <div
+              key={idx}
+              className={`flex flex-col ${msg.fromHost ? "items-start" : "items-end"}`}
+            >
+              <div
+                className={`max-w-[80%] rounded-2xl p-3.5 text-sm shadow-xs ${
+                  msg.fromHost
+                    ? "bg-white text-gray-800 border border-gray-200 rounded-tl-xs"
+                    : "bg-[#FF385C] text-white rounded-tr-xs"
+                }`}
+              >
+                <p className="leading-relaxed">{msg.text}</p>
+              </div>
+              <span className="text-[10px] text-gray-400 mt-1 px-1">{msg.time}</span>
+            </div>
+          ))}
+        </div>
+
+        <div className="px-6 py-2 border-t border-gray-100 bg-white flex flex-wrap gap-1.5">
+          {quickQuestions.map((q, i) => (
+            <button
+              key={i}
+              type="button"
+              onClick={() => setMessage(q)}
+              className="text-[11px] bg-gray-100 hover:bg-gray-200 text-gray-700 px-2.5 py-1 rounded-full transition cursor-pointer"
+            >
+              {q}
+            </button>
+          ))}
+        </div>
+
+        <form onSubmit={handleSend} className="p-4 border-t border-gray-200 bg-white flex gap-2">
+          <input
+            type="text"
+            placeholder="Write a message to your host..."
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            className="flex-1 rounded-xl border border-gray-300 px-3.5 py-2.5 text-sm focus:border-black outline-hidden"
+          />
+          <button
+            type="submit"
+            disabled={!message.trim()}
+            className="rounded-xl bg-[#FF385C] px-4 py-2.5 text-white font-bold text-xs hover:bg-[#E00B41] transition disabled:opacity-40 cursor-pointer flex items-center gap-1.5"
+          >
+            <Send className="w-3.5 h-3.5" />
+            Send
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}

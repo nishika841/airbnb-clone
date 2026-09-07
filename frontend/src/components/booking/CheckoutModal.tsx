@@ -1,8 +1,8 @@
-"use client";
+﻿"use client";
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { X, ShieldCheck, CreditCard, Lock, Star } from "lucide-react";
+import { X, ShieldCheck, CreditCard, Lock, Star, Sparkles } from "lucide-react";
 import { ListingDetail } from "@/types";
 import { formatPrice, formatDate, calculateNights } from "@/lib/utils";
 import { createBooking } from "@/lib/api";
@@ -52,7 +52,7 @@ export default function CheckoutModal({
 
       toast.success("Reservation confirmed! Have an incredible stay.", {
         duration: 5000,
-        icon: "??",
+        icon: "🎉",
       });
 
       onClose();
@@ -78,6 +78,16 @@ export default function CheckoutModal({
           </button>
           <h2 className="text-base font-bold text-gray-900">Confirm and pay</h2>
           <div className="w-9" />
+        </div>
+
+        {/* Mocked Checkout notice banner */}
+        <div className="bg-amber-50 px-6 py-2.5 border-b border-amber-200 flex items-center justify-between text-xs text-amber-900">
+          <span className="flex items-center gap-1.5 font-bold text-amber-800">
+            <Sparkles className="w-3.5 h-3.5 text-amber-600" /> Mocked Payment Processing
+          </span>
+          <span className="bg-white text-amber-800 border border-amber-300 px-2 py-0.5 rounded-full text-[11px] font-semibold">
+            Real Payment Gateway (Stripe) Coming Soon
+          </span>
         </div>
 
         {/* Body */}
@@ -108,7 +118,7 @@ export default function CheckoutModal({
               <div>
                 <p className="font-semibold text-gray-800">Dates</p>
                 <p className="text-gray-500 text-xs mt-0.5">
-                  {formatDate(startDate)}  {formatDate(endDate)} ({nights} nights)
+                  {formatDate(startDate)} – {formatDate(endDate)} ({nights} nights)
                 </p>
               </div>
               <button
@@ -139,8 +149,8 @@ export default function CheckoutModal({
           <div className="pt-6 space-y-4">
             <h4 className="text-base font-bold text-gray-900 flex items-center justify-between">
               <span>Pay with</span>
-              <span className="flex items-center gap-1 text-xs font-normal text-gray-500">
-                <Lock className="w-3.5 h-3.5 text-green-600" /> Mocked Secure Checkout
+              <span className="flex items-center gap-1 text-xs font-normal text-emerald-700 font-semibold">
+                <Lock className="w-3.5 h-3.5 text-emerald-600" /> Mocked Secure Checkout
               </span>
             </h4>
 
@@ -191,7 +201,7 @@ export default function CheckoutModal({
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <span className="font-bold text-sm text-gray-900">?Pay / GPay</span>
+                  <span className="font-bold text-sm text-gray-900">Pay / GPay</span>
                   <span className="text-sm font-semibold text-gray-900">Express 1-Click Pay</span>
                 </div>
                 <input
@@ -204,7 +214,7 @@ export default function CheckoutModal({
               </label>
             </div>
 
-            {/* Mocked Card form */}
+            {/* Mocked Card Form */}
             {paymentMethod === "card" && (
               <div className="rounded-xl border border-gray-300 p-3 space-y-2 bg-white text-xs">
                 <div>
@@ -212,7 +222,7 @@ export default function CheckoutModal({
                   <input
                     type="text"
                     readOnly
-                    value="   4242"
+                    value="•••• •••• •••• 4242"
                     className="w-full font-mono text-sm font-semibold outline-hidden text-gray-700 mt-0.5"
                   />
                 </div>
@@ -263,14 +273,14 @@ export default function CheckoutModal({
             </div>
           </div>
 
-          {/* Cancellation & Protection Policy */}
+          {/* Cancellation Policy */}
           <div className="pt-6 space-y-2 text-xs text-gray-500">
             <div className="flex items-center gap-2 text-gray-800 font-semibold">
               <ShieldCheck className="w-4 h-4 text-[#FF385C]" />
               <span>AirCover protection included</span>
             </div>
             <p>
-              Free cancellation before 48 hours of check-in. By selecting the button below, you agree to the Host&apos;s House Rules, Ground rules for guests, and Airbnb&apos;s Rebooking and Refund Policy.
+              Free cancellation before 48 hours of check-in. This is a simulated booking for evaluation purposes.
             </p>
           </div>
         </div>
@@ -286,7 +296,7 @@ export default function CheckoutModal({
             disabled={isProcessing}
             className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#FF385C] to-[#E00B41] px-8 py-3.5 text-sm font-bold text-white shadow-md hover:brightness-105 transition disabled:opacity-50 cursor-pointer"
           >
-            {isProcessing ? "Processing reservation..." : "Confirm & Pay"}
+            {isProcessing ? "Processing reservation..." : "Confirm & Pay (Mock)"}
           </button>
         </div>
       </div>

@@ -1,11 +1,25 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Search, Globe, Menu, User as UserIcon, Heart, Luggage, Home, PlusCircle, Sparkles, Check } from "lucide-react";
+import {
+  Search,
+  Globe,
+  Menu,
+  User as UserIcon,
+  Heart,
+  Luggage,
+  Home,
+  PlusCircle,
+  Sparkles,
+  Check,
+  MessageSquare,
+  ShieldCheck,
+} from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import SearchModal from "./SearchModal";
+import IdentityVerificationModal from "@/components/auth/IdentityVerificationModal";
 import { SearchFilterState } from "@/types";
 
 interface NavbarProps {
@@ -18,9 +32,9 @@ export default function Navbar({ onSearch, currentFilters }: NavbarProps) {
   const { user, isHost, switchUser, toggleHostMode } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isIdentityModalOpen, setIsIdentityModalOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  // Close dropdown on outside click
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
@@ -35,7 +49,6 @@ export default function Navbar({ onSearch, currentFilters }: NavbarProps) {
     if (onSearch) {
       onSearch(filters);
     } else {
-      // If on details or host page, navigate home with query params
       const q = new URLSearchParams();
       if (filters.search) q.append("search", filters.search);
       if (filters.start_date) q.append("start_date", filters.start_date);
@@ -111,13 +124,13 @@ export default function Navbar({ onSearch, currentFilters }: NavbarProps) {
                 )}
               </button>
 
-              <button
-                onClick={toggleHostMode}
-                title="Switch Guest / Host profile"
+              <Link
+                href="/messages"
                 className="hidden sm:flex rounded-full p-2.5 text-gray-700 hover:bg-gray-100 transition cursor-pointer"
+                title="Messages (Placeholder)"
               >
-                <Globe className="h-4 w-4" />
-              </button>
+                <MessageSquare className="h-4 w-4" />
+              </Link>
 
               {/* Profile Pill */}
               <button
@@ -143,7 +156,7 @@ export default function Navbar({ onSearch, currentFilters }: NavbarProps) {
                 <div className="absolute right-0 top-14 w-64 rounded-2xl border border-gray-200 bg-white py-2 shadow-xl z-50 animate-in fade-in slide-in-from-top-2 duration-150">
                   {/* Current Active User Info */}
                   <div className="px-4 py-2.5 border-b border-gray-100 bg-gray-50">
-                    <p className="text-xs text-gray-500">Active Profile</p>
+                    <p className="text-xs text-gray-500">Active Profile ({isHost ? "Host" : "Guest"})</p>
                     <p className="text-sm font-bold text-gray-900 flex items-center justify-between">
                       {user.name}
                       {user.is_superhost && (
@@ -162,15 +175,26 @@ export default function Navbar({ onSearch, currentFilters }: NavbarProps) {
                         toggleHostMode();
                         setIsMenuOpen(false);
                       }}
-                      className="w-full text-left text-xs font-semibold px-2 py-1.5 rounded-lg bg-pink-50 text-[#FF385C] hover:bg-pink-100 transition flex items-center justify-between"
+                      className="w-full text-left text-xs font-semibold px-2 py-1.5 rounded-lg bg-pink-50 text-[#FF385C] hover:bg-pink-100 transition flex items-center justify-between cursor-pointer"
                     >
-                      <span>Switch to {isHost ? "Guest Mode" : "Host Mode"}</span>
+                      <span>Switch to {isHost ? "Guest Mode (Alex)" : "Host Mode (Elena)"}</span>
                       <Check className="w-3.5 h-3.5" />
                     </button>
                   </div>
 
                   {/* Links */}
                   <div className="py-1">
+                    <Link
+                      href="/messages"
+                      onClick={() => setIsMenuOpen(false)}
+                      className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition"
+                    >
+                      <MessageSquare className="w-4 h-4 text-gray-500" />
+                      Messages
+                      <span className="ml-auto text-[10px] bg-pink-100 text-[#FF385C] font-bold px-1.5 py-0.2 rounded-full">
+                        Demo
+                      </span>
+                    </Link>
                     <Link
                       href="/trips"
                       onClick={() => setIsMenuOpen(false)}
@@ -187,6 +211,17 @@ export default function Navbar({ onSearch, currentFilters }: NavbarProps) {
                       <Heart className="w-4 h-4 text-gray-500" />
                       Wishlists
                     </Link>
+                    <button
+                      onClick={() => {
+                        setIsIdentityModalOpen(true);
+                        setIsMenuOpen(false);
+                      }}
+                      className="w-full text-left flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition cursor-pointer"
+                    >
+                      <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                      Identity Verification
+                      <span className="ml-auto text-[10px] text-emerald-600 font-bold">Verified ✓</span>
+                    </button>
                   </div>
 
                   <div className="border-t border-gray-100 py-1">
@@ -223,6 +258,12 @@ export default function Navbar({ onSearch, currentFilters }: NavbarProps) {
         onClose={() => setIsSearchOpen(false)}
         onSearch={handleSearchTrigger}
         initialFilters={currentFilters}
+      />
+
+      {/* Identity Verification Modal */}
+      <IdentityVerificationModal
+        isOpen={isIdentityModalOpen}
+        onClose={() => setIsIdentityModalOpen(false)}
       />
     </>
   );
