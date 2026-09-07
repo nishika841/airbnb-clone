@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Trash2, Image as ImageIcon, Sparkles, Check } from "lucide-react";
+import { Plus, Trash2, Image as ImageIcon, Sparkles, Check, Upload, Cloud } from "lucide-react";
 import { ListingCreateInput, ListingDetail } from "@/types";
 import { createListing, updateListing } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
@@ -90,6 +90,22 @@ export default function ListingForm({ initialData, isEdit = false }: ListingForm
     setNewPhotoUrl("");
   };
 
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    Array.from(files).forEach((file) => {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        if (event.target?.result) {
+          setPhotoUrls((prev) => [...prev, event.target!.result as string]);
+          toast.success(`Uploaded ${file.name}`);
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
   const handleRemovePhoto = (index: number) => {
     setPhotoUrls((prev) => prev.filter((_, i) => i !== index));
   };
@@ -132,11 +148,11 @@ export default function ListingForm({ initialData, isEdit = false }: ListingForm
 
       if (isEdit && initialData) {
         await updateListing(initialData.id, payload);
-        toast.success("Listing updated successfully! ??");
+        toast.success("Listing updated successfully! 🎉");
         router.push(`/rooms/${initialData.id}`);
       } else {
         const created = await createListing(payload);
-        toast.success("Listing published successfully! ??");
+        toast.success("Listing published successfully! 🚀");
         router.push(`/rooms/${created.id}`);
       }
     } catch (err: any) {
@@ -413,34 +429,62 @@ export default function ListingForm({ initialData, isEdit = false }: ListingForm
         </div>
       </div>
 
-      {/* 5. Photos */}
+      {/* 5. Photos & Cloud Storage Upload */}
       <div className="bg-white rounded-3xl p-6 sm:p-8 border border-gray-200 shadow-xs space-y-6">
-        <div>
-          <h3 className="text-xl font-black text-gray-900">Photos</h3>
-          <p className="text-xs text-gray-500 mt-1">Add high-resolution image URLs for your home</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-xl font-black text-gray-900">Photos</h3>
+            <p className="text-xs text-gray-500 mt-1">
+              Add photos via URL or upload image files directly
+            </p>
+          </div>
+          <span className="flex items-center gap-1 text-[11px] bg-blue-50 text-blue-700 font-semibold px-2.5 py-1 rounded-full border border-blue-200">
+            <Cloud className="w-3 h-3 text-blue-600" /> Cloud / Local Upload
+          </span>
         </div>
 
-        {/* Add photo input */}
-        <div className="flex gap-2">
-          <input
-            type="url"
-            placeholder="Paste image URL (e.g. https://images.unsplash.com/...)"
-            value={newPhotoUrl}
-            onChange={(e) => setNewPhotoUrl(e.target.value)}
-            className="flex-1 rounded-xl border border-gray-300 p-3 text-sm focus:border-black outline-hidden"
-          />
-          <button
-            type="button"
-            onClick={handleAddPhoto}
-            className="flex items-center gap-1.5 rounded-xl bg-gray-900 px-5 text-xs font-bold text-white hover:bg-black transition cursor-pointer"
-          >
-            <Plus className="w-4 h-4" />
-            Add
-          </button>
+        {/* Upload options */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* Option A: Paste URL */}
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-gray-700">Paste Image URL</label>
+            <div className="flex gap-2">
+              <input
+                type="url"
+                placeholder="https://images.unsplash.com/..."
+                value={newPhotoUrl}
+                onChange={(e) => setNewPhotoUrl(e.target.value)}
+                className="flex-1 rounded-xl border border-gray-300 p-2.5 text-xs focus:border-black outline-hidden"
+              />
+              <button
+                type="button"
+                onClick={handleAddPhoto}
+                className="rounded-xl bg-gray-900 px-4 text-xs font-bold text-white hover:bg-black transition cursor-pointer"
+              >
+                Add
+              </button>
+            </div>
+          </div>
+
+          {/* Option B: Direct File Upload */}
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-gray-700">Upload Image Files</label>
+            <label className="flex items-center justify-center gap-2 border-2 border-dashed border-gray-300 hover:border-black rounded-xl p-2.5 text-xs font-bold text-gray-700 hover:bg-gray-50 transition cursor-pointer">
+              <Upload className="w-4 h-4 text-gray-500" />
+              <span>Choose Files to Upload</span>
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={handleFileUpload}
+                className="hidden"
+              />
+            </label>
+          </div>
         </div>
 
         {/* Photo Previews */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-2">
           {photoUrls.map((url, index) => (
             <div
               key={index}

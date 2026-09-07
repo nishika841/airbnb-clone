@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
@@ -16,6 +16,8 @@ import {
   Check,
   MessageSquare,
   ShieldCheck,
+  Sun,
+  Moon,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import SearchModal from "./SearchModal";
@@ -33,7 +35,29 @@ export default function Navbar({ onSearch, currentFilters }: NavbarProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isIdentityModalOpen, setIsIdentityModalOpen] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    // Check saved theme
+    const savedTheme = localStorage.getItem("airbnb_theme");
+    if (savedTheme === "dark") {
+      setIsDarkMode(true);
+      document.documentElement.classList.add("dark");
+    }
+  }, []);
+
+  const toggleDarkMode = () => {
+    const next = !isDarkMode;
+    setIsDarkMode(next);
+    if (next) {
+      document.documentElement.classList.add("dark");
+      localStorage.setItem("airbnb_theme", "dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+      localStorage.setItem("airbnb_theme", "light");
+    }
+  };
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -132,6 +156,19 @@ export default function Navbar({ onSearch, currentFilters }: NavbarProps) {
                 <MessageSquare className="h-4 w-4" />
               </Link>
 
+              {/* Dark Mode Toggle Button */}
+              <button
+                onClick={toggleDarkMode}
+                className="rounded-full p-2.5 text-gray-700 hover:bg-gray-100 transition cursor-pointer"
+                title={isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
+              >
+                {isDarkMode ? (
+                  <Sun className="h-4 w-4 text-amber-400" />
+                ) : (
+                  <Moon className="h-4 w-4 text-gray-700" />
+                )}
+              </button>
+
               {/* Profile Pill */}
               <button
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -221,6 +258,13 @@ export default function Navbar({ onSearch, currentFilters }: NavbarProps) {
                       <ShieldCheck className="w-4 h-4 text-emerald-600" />
                       Identity Verification
                       <span className="ml-auto text-[10px] text-emerald-600 font-bold">Verified ✓</span>
+                    </button>
+                    <button
+                      onClick={toggleDarkMode}
+                      className="w-full text-left flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition cursor-pointer"
+                    >
+                      {isDarkMode ? <Sun className="w-4 h-4 text-amber-500" /> : <Moon className="w-4 h-4 text-gray-500" />}
+                      <span>{isDarkMode ? "Light Mode" : "Dark Mode"}</span>
                     </button>
                   </div>
 
